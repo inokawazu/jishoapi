@@ -1,6 +1,6 @@
 Module {
-	name: 'jishocli'
-	description: 'A command line program that performs a search on jisho.org to translate English and Japanese.'
+	name: 'jishoapi'
+	description: 'A v library that provides v API.'
 	version: '0.0.0'
 	license: 'MIT'
 	dependencies: []
