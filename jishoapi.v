@@ -1,18 +1,17 @@
-module main
+module jishoapi
 
 import net.urllib as nu
 import net.http as nh {get}
 import x.json2
-import os
 
-struct WordReading {
-	mut:
+pub struct WordReading {
+	pub mut:
 	word string
 	reading string
 }
 
-struct Sense {
-	mut:
+pub struct Sense {
+	pub mut:
 	english_definitions []string
 	parts_of_speech []string
 	links []string
@@ -23,15 +22,15 @@ struct Sense {
 	info []string
 }
 
-struct Attribution {
-	mut: 
+pub struct Attribution {
+	pub mut: 
 	jmdict string
 	dmnedict string
 	dbpedia string
 }
 
-struct Entry { 
-	mut:
+pub struct Entry { 
+	pub mut:
 		slug string
 		is_common bool
 		tags []string
@@ -41,21 +40,21 @@ struct Entry {
 		attribution Attribution
 }
 
-struct JishoResponse{
-	mut:
+pub struct JishoResponse{
+	pub mut:
 	meta map[string]json2.Any
 	data []Entry
 }
 
-struct JishoWordSearch {
+pub struct JishoWordSearch {
 	base_url string = "https://jisho.org/api/v1/search/words" 
-	mut:
+	pub mut:
 	keyword string [required]
 	page int = 1
 	response JishoResponse = JishoResponse{}
 }
 
-fn (mut wr WordReading) from_json(f json2.Any) {
+pub fn (mut wr WordReading) from_json(f json2.Any) {
 	obj := f.as_map()
 	for k, v in obj {
 		match k {
@@ -66,7 +65,7 @@ fn (mut wr WordReading) from_json(f json2.Any) {
 	}
 }
 
-fn (mut sn Sense) from_json(f json2.Any) {
+pub fn (mut sn Sense) from_json(f json2.Any) {
 	obj := f.as_map()
 	for k, v in obj {
 		match k {
@@ -83,7 +82,7 @@ fn (mut sn Sense) from_json(f json2.Any) {
 	}
 }
 
-fn (mut attr Attribution) from_json(f json2.Any) {
+pub fn (mut attr Attribution) from_json(f json2.Any) {
 	obj := f.as_map()
 	for k, v in obj {
 		match k {
@@ -95,7 +94,7 @@ fn (mut attr Attribution) from_json(f json2.Any) {
 	}
 }
 
-fn (mut ent Entry) from_json(f json2.Any) {
+pub fn (mut ent Entry) from_json(f json2.Any) {
 	obj := f.as_map()
 	for k, v in obj {
 		match k {
@@ -123,7 +122,7 @@ fn (mut ent Entry) from_json(f json2.Any) {
 	}
 }
 
-fn (mut jr JishoResponse) from_json(f json2.Any) {
+pub fn (mut jr JishoResponse) from_json(f json2.Any) {
 	obj := f.as_map()
 	for k, v in obj {
 		match k {
@@ -140,39 +139,20 @@ fn (mut jr JishoResponse) from_json(f json2.Any) {
 	}
 }
 
-fn (jr JishoResponse) is_ok() bool {
+pub fn (jr JishoResponse) is_ok() bool {
 	status := jr.meta["status"].int()// or {error("Error with status code for Jisho Response.")}
 	return status == int(nh.Status.ok)
 }
 
-fn (jws JishoWordSearch) url() string {
+pub fn (jws JishoWordSearch) url() string {
 	kw := "?keyword=" + nu.path_escape(jws.keyword)
 	pg := "&page=" + jws.page.str()
 	return jws.base_url + kw + pg 
 }
 
-fn (mut jws JishoWordSearch) search() ? {
+pub fn (mut jws JishoWordSearch) search() ? {
 	resp := get(jws.url()) ?
 	jjson := json2.raw_decode(resp.text) ? 
 	jws.response.from_json(jjson)
 }
 
-fn main() {
-
-	if os.args.len>1 {
-		search_string := os.args[1..].join(" ")
-		// println("The arg string is ${}")
-		mut jws := JishoWordSearch{keyword: search_string}
-		// println(jws)
-		jws.search()?
-
-		for ent in jws.response.data {
-			// println("Slug: ${ent.slug} ")
-			println("WordReadings: ${ent.wordreadings} ")
-			println("WordReadings: ${ent.senses} ")
-			println("")
-		}
-
-	}
-
-}
